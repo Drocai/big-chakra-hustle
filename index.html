@@ -28,7 +28,15 @@
   <script type="module" src="src/main.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      // Force update: unregister old SW, then register fresh
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        Promise.all(regs.map(r => r.unregister())).then(() => {
+          // Clear all caches
+          caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+          // Register fresh SW
+          navigator.serviceWorker.register('sw.js').catch(() => {});
+        });
+      });
     }
   </script>
 

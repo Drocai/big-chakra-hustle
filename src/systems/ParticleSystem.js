@@ -113,9 +113,12 @@ export class ParticleSystem {
   }
 
   draw(ctx) {
+    // Additive blending for all particles — per visual mandate
+    ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < this.pool.length; i++) {
       this.pool[i].draw(ctx);
     }
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   /** Count of currently active particles (debug). */

@@ -295,52 +295,236 @@ export class Player {
     // Invincibility flash
     if (this.invincible > 0 && frameCount % 4 < 2) return;
 
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = colors.glow;
-    ctx.fillStyle = colors.main;
+    const cx = this.x + this.w / 2;
+    const cy = this.y + this.h / 2;
 
     ctx.save();
-    ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
+    ctx.translate(cx, cy);
 
     // Tilt with velocity
-    const tilt = this.vx * 2;
+    const tilt = this.vx * 1.5;
     ctx.rotate(tilt * Math.PI / 180);
 
     if (this.zodiac === 'AIRES') {
-      // Rectangular body with horns
-      ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(-this.w / 2 - 5, -this.h / 2 - 5, 10, 10);
-      ctx.fillRect(this.w / 2 - 5, -this.h / 2 - 5, 10, 10);
+      this._drawAires(ctx, frameCount, colors);
     } else {
-      // Rounded body with floating orb
-      ctx.beginPath();
-      ctx.roundRect(-this.w / 2, -this.h / 2, this.w, this.h, 10);
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(0, -this.h / 2 - 10, 5 + Math.sin(frameCount * 0.2) * 2, 0, Math.PI * 2);
-      ctx.fill();
+      this._drawKoidon(ctx, frameCount, colors);
     }
 
     ctx.restore();
-    ctx.shadowBlur = 0;
 
     // Draw attack slash
     if (this.attacking) {
       this._drawAttack(ctx, frameCount);
     }
+
+    // Energy trail
+    if (Math.abs(this.vx) > 2 || this.dashing) {
+      this._drawTrail(ctx, frameCount);
+    }
+  }
+
+  /** AIRES: Floating icosahedron reactor core + torus horn segments. Aggressive pulse. */
+  _drawAires(ctx, frameCount, colors) {
+    const pulse = 1 + Math.sin(frameCount * 0.15) * 0.06;
+    const coreRadius = this.w * 0.45 * pulse;
+
+    // Outer aura
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.shadowBlur = 35;
+    ctx.shadowColor = colors.main;
+    ctx.fillStyle = colors.main;
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius + 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Core: rotating icosahedron (drawn as multi-sided polygon)
+    ctx.save();
+    ctx.rotate(frameCount * 0.03);
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = colors.main;
+    ctx.fillStyle = colors.main;
+    this._polygon(ctx, 0, 0, coreRadius, 6);
+    ctx.fill();
+
+    // Inner wireframe
+    ctx.strokeStyle = colors.secondary || '#ff4d4d';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.5;
+    this._polygon(ctx, 0, 0, coreRadius * 0.6, 6);
+    ctx.stroke();
+    ctx.restore();
+
+    // Horn segments (floating torus pieces)
+    ctx.save();
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#ffffff';
+    ctx.strokeStyle = '#cccccc';
+    ctx.lineWidth = 4;
+
+    // Left horn
+    const hornFloat = Math.sin(frameCount * 0.08) * 3;
+    ctx.beginPath();
+    ctx.arc(-this.w * 0.45, -this.h * 0.35 + hornFloat, 12, Math.PI * 0.8, Math.PI * 1.8);
+    ctx.stroke();
+
+    // Right horn
+    ctx.beginPath();
+    ctx.arc(this.w * 0.45, -this.h * 0.35 - hornFloat, 12, Math.PI * 1.2, Math.PI * 2.2);
+    ctx.stroke();
+    ctx.restore();
+
+    // Eye — aggressive slit
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = '#ffffff';
+    const eyeX = this.facingRight ? 3 : -3;
+    ctx.fillRect(eyeX - 4, -3, 8, 3);
+    ctx.fillStyle = colors.main;
+    ctx.fillRect(eyeX - 2, -2, 4, 2);
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+  }
+
+  /** KOIDON: Smooth capsule fuselage + floating fin planes. Fluid swim motion. */
+  _drawKoidon(ctx, frameCount, colors) {
+    const swimBob = Math.sin(frameCount * 0.08) * 4;
+    const swimTilt = Math.sin(frameCount * 0.06) * 0.05;
+
+    ctx.save();
+    ctx.rotate(swimTilt);
+    ctx.translate(0, swimBob * 0.3);
+
+    // Outer aura
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = colors.main;
+    ctx.fillStyle = colors.main;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.w * 0.6 + 10, this.h * 0.4 + 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Body capsule
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = colors.main;
+    ctx.fillStyle = colors.main;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.w * 0.5, this.h * 0.38, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner glow core
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = colors.secondary || '#0088ff';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.w * 0.3, this.h * 0.22, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Tail fin — flapping
+    const tailFlap = Math.sin(frameCount * 0.2) * 0.4;
+    ctx.save();
+    ctx.translate(-this.w * 0.45, 0);
+    ctx.rotate(tailFlap);
+    ctx.fillStyle = colors.main;
+    ctx.globalAlpha = 0.6;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = colors.main;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-this.w * 0.35, -this.h * 0.25);
+    ctx.lineTo(-this.w * 0.35, this.h * 0.25);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Top fin
+    const finWave = Math.sin(frameCount * 0.12) * 0.15;
+    ctx.save();
+    ctx.translate(0, -this.h * 0.35);
+    ctx.rotate(finWave);
+    ctx.fillStyle = colors.main;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-5, 0);
+    ctx.lineTo(0, -this.h * 0.2);
+    ctx.lineTo(8, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Eye — soft circle
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = '#ffffff';
+    const eyeX = this.facingRight ? 6 : -6;
+    ctx.beginPath();
+    ctx.arc(eyeX, -2, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = colors.secondary || '#0088ff';
+    ctx.beginPath();
+    ctx.arc(eyeX + (this.facingRight ? 1 : -1), -2, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore(); // swimTilt + swimBob
+    ctx.shadowBlur = 0;
+  }
+
+  /** Draw energy trail behind player when moving fast. */
+  _drawTrail(ctx, frameCount) {
+    const colors = this.colors;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.2;
+    const trailLen = this.dashing ? 6 : 3;
+    for (let i = 1; i <= trailLen; i++) {
+      const offset = i * 5 * (this.facingRight ? 1 : -1);
+      const alpha = 0.15 / i;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colors.main;
+      ctx.beginPath();
+      ctx.arc(
+        this.x + this.w / 2 - offset * (this.facingRight ? 1 : -1),
+        this.y + this.h / 2,
+        this.w * 0.3 / i, 0, Math.PI * 2
+      );
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  /** Draw polygon path (utility for geometric rendering). */
+  _polygon(ctx, cx, cy, radius, sides) {
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * Math.PI * 2) / sides - Math.PI / 2;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
   }
 
   _drawAttack(ctx, frameCount) {
-    const hb = this.attackHitbox;
     const progress = 1 - (this.attackTimer / CONFIG.player.attackDuration);
 
     ctx.save();
-    ctx.globalAlpha = 0.6 * (1 - progress);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.7 * (1 - progress);
     ctx.strokeStyle = this.colors.glow;
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 15;
+    ctx.lineWidth = 4;
+    ctx.shadowBlur = 25;
     ctx.shadowColor = this.colors.glow;
 
     // Arc slash
@@ -350,9 +534,17 @@ export class Player {
     const sweep = (Math.PI * 2 / 3) * progress;
 
     ctx.beginPath();
-    ctx.arc(cx, cy, CONFIG.player.attackWidth * 0.8, startAngle, startAngle + sweep);
+    ctx.arc(cx, cy, CONFIG.player.attackWidth * 0.9, startAngle, startAngle + sweep);
     ctx.stroke();
 
+    // Inner slash glow
+    ctx.globalAlpha = 0.3 * (1 - progress);
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, CONFIG.player.attackWidth * 0.9, startAngle, startAngle + sweep);
+    ctx.stroke();
+
+    ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
     ctx.restore();

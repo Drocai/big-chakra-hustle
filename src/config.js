@@ -13,7 +13,7 @@ export const CONFIG = {
       maxJumps: 1,
       dashSpeed: 25,
       label: 'AIRES [FIRE]',
-      colors: { main: '#ff2a00', glow: '#ff8800', trail: '#550000' }
+      colors: { main: '#ff0055', glow: '#ff0055', trail: '#550000', secondary: '#ff4d4d' }
     },
     KOIDON: {
       gravity: 0.35,
@@ -22,7 +22,7 @@ export const CONFIG = {
       maxJumps: 2,
       dashSpeed: 15,
       label: 'KOIDON [WATER]',
-      colors: { main: '#00f7ff', glow: '#0044ff', trail: '#001133' }
+      colors: { main: '#00ffff', glow: '#00ffff', trail: '#001133', secondary: '#0088ff' }
     }
   },
 
@@ -108,20 +108,25 @@ export const CONFIG = {
     maxSpeed: 0.2
   },
 
-  // --- Colors ---
+  // --- Colors (Trap Fantasy Palette) ---
   colors: {
-    bg: '#050510',
-    bgGradientInner: '#150520',
-    bgGradientOuter: '#000000',
+    bg: '#050505',
+    bgGradientInner: '#1a0b2e',
+    bgGradientOuter: '#050505',
     floor: '#0a0a0a',
     platform: '#bc13fe',
     accent: '#73fbd3',
     accent2: '#a78bfa',
-    gold: '#f5c542',
+    gold: '#ffd700',
     white: '#ffffff',
     healthGreen: '#4ade80',
-    healthRed: '#ef4444',
-    chakraBar: '#a78bfa'
+    healthRed: '#ff0055',
+    chakraBar: '#a78bfa',
+    gridPurple: '#bc13fe',
+    neonCrimson: '#ff0055',
+    electricCyan: '#00ffff',
+    voidBlack: '#050505',
+    cosmicPurple: '#1a0b2e'
   },
 
   // --- Game States ---

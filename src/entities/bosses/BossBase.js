@@ -227,26 +227,66 @@ export class BossBase {
   }
 
   _drawBody(ctx, frameCount) {
-    // Default: glowing square with inner pattern
-    ctx.shadowBlur = 15;
+    // Outer aura
+    ctx.save();
+    ctx.globalAlpha = 0.12 + Math.sin(frameCount * 0.05) * 0.05;
+    ctx.fillStyle = this.chakra.color;
+    ctx.shadowBlur = 40;
     ctx.shadowColor = this.chakra.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, this.w * 0.7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
-    ctx.fillRect(-this.w / 2, -this.h / 2, this.w, this.h);
+    // Main body — rotating polygon based on phase
+    const sides = 6 + this.phase * 2;
+    ctx.save();
+    ctx.rotate(frameCount * 0.01 * this.phase);
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = this.chakra.color;
+    ctx.fillStyle = this.chakra.color;
+    this._bossPolygon(ctx, 0, 0, this.w * 0.5, sides);
+    ctx.fill();
 
-    // Phase indicator dots
-    ctx.fillStyle = '#fff';
+    // Inner wireframe
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.4;
+    this._bossPolygon(ctx, 0, 0, this.w * 0.35, sides);
+    ctx.stroke();
+
+    // Core
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#ffffff';
+    this._bossPolygon(ctx, 0, 0, this.w * 0.15, sides);
+    ctx.fill();
+    ctx.restore();
+
+    // Phase indicator — orbiting dots
     for (let i = 0; i < this.phase; i++) {
+      const angle = frameCount * 0.03 + (i * Math.PI * 2) / this.phase;
+      const ox = Math.cos(angle) * (this.w * 0.6);
+      const oy = Math.sin(angle) * (this.w * 0.6);
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = this.chakra.color;
       ctx.beginPath();
-      ctx.arc(-10 + i * 10, -this.h / 2 - 8, 3, 0, Math.PI * 2);
+      ctx.arc(ox, oy, 4, 0, Math.PI * 2);
       ctx.fill();
     }
+    ctx.shadowBlur = 0;
+  }
 
-    // Inner pattern based on world
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 1;
+  _bossPolygon(ctx, cx, cy, radius, sides) {
     ctx.beginPath();
-    ctx.arc(0, 0, this.w * 0.3, 0, Math.PI * 2);
-    ctx.stroke();
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * Math.PI * 2) / sides - Math.PI / 2;
+      const x = cx + Math.cos(angle) * radius;
+      const y = cy + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
   }
 
   _drawHPBar(ctx) {
@@ -267,7 +307,7 @@ export class BossBase {
     ctx.strokeRect(x, y, barW, barH);
 
     // Boss name
-    ctx.font = 'bold 10px monospace';
+    ctx.font = 'bold 10px "Orbitron", monospace';
     ctx.fillStyle = this.chakra.color;
     ctx.textAlign = 'center';
     ctx.fillText(this.name, this.x + this.w / 2, y - 4);

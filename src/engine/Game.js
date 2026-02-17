@@ -613,10 +613,8 @@ export class Game {
       this.dialog.draw(ctx, this.width, this.height);
     }
 
-    // Post-processing
-    if (this.state !== CONFIG.states.TITLE && this.state !== CONFIG.states.CHARACTER_CREATE) {
-      this.effects.apply(ctx, this.width, this.height, frameCount);
-    }
+    // Post-processing — apply to ALL screens for consistent Trap Fantasy feel
+    this.effects.apply(ctx, this.width, this.height, frameCount);
 
     // Debug
     if (CONFIG.display.debugMode) {
@@ -627,21 +625,40 @@ export class Game {
   }
 
   _drawDefaultBg(ctx, frameCount) {
-    const pulse = Math.sin(frameCount * 0.01) * 20;
+    const pulse = Math.sin(frameCount * 0.008) * 15;
     const grad = ctx.createRadialGradient(
-      this.width / 2, this.height / 2, 100 + pulse,
+      this.width / 2, this.height / 2, 80 + pulse,
       this.width / 2, this.height / 2, this.width
     );
-    grad.addColorStop(0, CONFIG.colors.bgGradientInner);
-    grad.addColorStop(1, CONFIG.colors.bgGradientOuter);
+    grad.addColorStop(0, '#1a0b2e');
+    grad.addColorStop(0.6, '#0a0515');
+    grad.addColorStop(1, '#050505');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    ctx.fillStyle = '#fff';
+    // Subtle perspective grid
+    ctx.strokeStyle = '#bc13fe10';
+    ctx.lineWidth = 1;
+    const gridOff = (frameCount * 0.15) % 50;
+    for (let x = -gridOff; x < this.width + 50; x += 50) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, this.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < this.height; y += 50) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(this.width, y);
+      ctx.stroke();
+    }
+
+    // Stars
     for (let i = 0; i < this.stars.length; i++) {
       const s = this.stars[i];
-      const x = (s.x * this.width + frameCount * s.speed) % this.width;
-      ctx.globalAlpha = s.a;
+      const x = (s.x * this.width + frameCount * s.speed * 0.1) % this.width;
+      ctx.globalAlpha = s.a * 0.7;
+      ctx.fillStyle = i % 7 === 0 ? '#bc13fe' : '#ffffff';
       ctx.fillRect(x, s.y * this.height, s.size, s.size);
     }
     ctx.globalAlpha = 1;
@@ -651,51 +668,76 @@ export class Game {
     const cx = this.width / 2;
     const cy = this.height / 2;
 
-    // Cosmic orb
-    const orbSize = 60 + Math.sin(this._titlePulse) * 10;
-    const orbGrad = ctx.createRadialGradient(cx, cy - 80, 0, cx, cy - 80, orbSize);
-    orbGrad.addColorStop(0, 'rgba(115, 251, 211, 0.6)');
-    orbGrad.addColorStop(0.5, 'rgba(167, 139, 250, 0.3)');
+    // Cosmic orb with aggressive bloom
+    const orbSize = 70 + Math.sin(this._titlePulse) * 12;
+    const orbGrad = ctx.createRadialGradient(cx, cy - 90, 0, cx, cy - 90, orbSize);
+    orbGrad.addColorStop(0, 'rgba(255, 0, 85, 0.4)');
+    orbGrad.addColorStop(0.4, 'rgba(0, 255, 255, 0.2)');
     orbGrad.addColorStop(1, 'transparent');
     ctx.fillStyle = orbGrad;
     ctx.beginPath();
-    ctx.arc(cx, cy - 80, orbSize, 0, Math.PI * 2);
+    ctx.arc(cx, cy - 90, orbSize, 0, Math.PI * 2);
     ctx.fill();
 
     // Sacred geometry behind title
-    flowerOfLife(ctx, cx, cy - 80, orbSize * 0.8, '#73fbd3', 0.1, frameCount * 0.005);
+    flowerOfLife(ctx, cx, cy - 90, orbSize * 0.8, '#bc13fe', 0.12, frameCount * 0.005);
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const titleGrad = ctx.createLinearGradient(cx - 200, cy, cx + 200, cy);
-    titleGrad.addColorStop(0, '#ff00ff');
+    // Glitch text effect — RGB split
+    const titleFont = 'bold 52px "Orbitron", "Rajdhani", monospace';
+
+    // Red offset
+    ctx.font = titleFont;
+    ctx.fillStyle = '#ff005540';
+    ctx.fillText('BIG CHAKRA HUSTLE', cx - 2, cy);
+
+    // Cyan offset
+    ctx.fillStyle = '#00ffff40';
+    ctx.fillText('BIG CHAKRA HUSTLE', cx + 2, cy);
+
+    // Main title with gradient
+    const titleGrad = ctx.createLinearGradient(cx - 250, cy, cx + 250, cy);
+    titleGrad.addColorStop(0, '#ff0055');
+    titleGrad.addColorStop(0.5, '#ffffff');
     titleGrad.addColorStop(1, '#00ffff');
 
-    ctx.font = 'bold 52px "Courier New", monospace';
     ctx.fillStyle = titleGrad;
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = '#ff00ff';
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = '#ff0055';
     ctx.fillText('BIG CHAKRA HUSTLE', cx, cy);
     ctx.shadowBlur = 0;
 
-    ctx.font = '16px "Courier New", monospace';
-    ctx.fillStyle = '#ccc';
-    ctx.fillText('"We\'re not charging vibrations... we\'re transmitting frequency."', cx, cy + 50);
+    // Subtitle
+    ctx.font = '13px "Rajdhani", monospace';
+    ctx.fillStyle = '#bc13fe';
+    ctx.letterSpacing = '6px';
+    ctx.fillText('FREQUENCY FACTORY // 2026', cx, cy + 45);
+
+    ctx.font = '14px "Rajdhani", monospace';
+    ctx.fillStyle = '#555';
+    ctx.fillText('"We\'re not charging vibrations... we\'re transmitting frequency."', cx, cy + 70);
 
     // High score
     if (this.saveSystem.persistent.highScore > 0) {
-      ctx.font = '14px monospace';
+      ctx.font = 'bold 13px "Orbitron", monospace';
       ctx.fillStyle = CONFIG.colors.gold;
-      ctx.fillText(`HIGH SCORE: ${this.saveSystem.persistent.highScore}`, cx, cy + 80);
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = CONFIG.colors.gold;
+      ctx.fillText(`HIGH SCORE: ${this.saveSystem.persistent.highScore}`, cx, cy + 95);
+      ctx.shadowBlur = 0;
     }
 
     const alpha = 0.5 + Math.sin(frameCount * 0.08) * 0.5;
     ctx.globalAlpha = alpha;
-    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.font = 'bold 18px "Orbitron", monospace';
     ctx.fillStyle = '#00ffff';
-    ctx.fillText('PRESS ENTER TO TRANSMIT', cx, cy + 120);
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00ffff';
+    ctx.fillText('PRESS ENTER TO TRANSMIT', cx, cy + 130);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
 
     ctx.restore();
@@ -748,16 +790,19 @@ export class Game {
   }
 
   _drawPauseOverlay(ctx) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
     ctx.textAlign = 'center';
-    ctx.font = 'bold 48px "Courier New", monospace';
+    ctx.font = 'bold 48px "Orbitron", monospace';
     ctx.fillStyle = '#fff';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#bc13fe';
     ctx.fillText('PAUSED', this.width / 2, this.height / 2 - 20);
+    ctx.shadowBlur = 0;
 
-    ctx.font = '16px monospace';
-    ctx.fillStyle = '#aaa';
+    ctx.font = '14px "Rajdhani", monospace';
+    ctx.fillStyle = '#888';
     ctx.fillText('ESC to resume', this.width / 2, this.height / 2 + 20);
 
     // Stats
@@ -773,14 +818,24 @@ export class Game {
   }
 
   _drawGameOver(ctx) {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
     ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
     ctx.textAlign = 'center';
 
-    ctx.font = 'bold 42px "Courier New", monospace';
+    // Glitch text — RGB split on death title
+    const deathFont = 'bold 40px "Orbitron", monospace';
+    ctx.font = deathFont;
+
+    // Red offset
+    ctx.fillStyle = '#ff005550';
+    ctx.fillText('VIBRATION DEPLETED', this.width / 2 - 3, this.height / 2 - 70);
+    // Cyan offset
+    ctx.fillStyle = '#00ffff50';
+    ctx.fillText('VIBRATION DEPLETED', this.width / 2 + 3, this.height / 2 - 70);
+
     ctx.fillStyle = CONFIG.colors.healthRed;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 30;
     ctx.shadowColor = CONFIG.colors.healthRed;
     ctx.fillText('VIBRATION DEPLETED', this.width / 2, this.height / 2 - 70);
     ctx.shadowBlur = 0;

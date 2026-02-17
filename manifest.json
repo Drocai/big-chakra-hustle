@@ -1,0 +1,19 @@
+{
+  "name": "Big Chakra Hustle",
+  "short_name": "Chakra Hustle",
+  "description": "2D action-platformer roguelike — infinite procedural levels across 7 chakra worlds with astrology integration.",
+  "start_url": "/index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050510",
+  "theme_color": "#73fbd3",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23050510' stroke='%2373fbd3' stroke-width='3'/><text x='50' y='58' text-anchor='middle' font-size='28' fill='%2373fbd3'>%E2%9C%A6</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

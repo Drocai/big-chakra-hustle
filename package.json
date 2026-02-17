@@ -1,0 +1,29 @@
+{
+  "name": "big-chakra-hustle",
+  "version": "1.0.0",
+  "description": "Neon cyberpunk roguelike platformer across 7 chakra worlds. Your birth chart determines your powers. Procedural everything. Zero dependencies. ~250KB.",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . -l 3001"
+  },
+  "keywords": [
+    "roguelike",
+    "platformer",
+    "astrology",
+    "chakra",
+    "cyberpunk",
+    "procedural",
+    "web-game",
+    "pwa",
+    "html5-game",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://djmc1.github.io/big-chakra-hustle/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djmc1/big-chakra-hustle.git"
+  }
+}

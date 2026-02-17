@@ -78,23 +78,23 @@ export class CharacterCreation {
     ctx.fillRect(0, 0, width, height);
 
     const cx = width / 2;
-    let y = 60;
+    let y = 40;
 
     // Title
     ctx.save();
     ctx.textAlign = 'center';
-    ctx.font = 'bold 32px "Courier New", monospace';
+    ctx.font = 'bold 26px "Orbitron", monospace';
     const grad = ctx.createLinearGradient(cx - 200, y, cx + 200, y);
     grad.addColorStop(0, '#a78bfa');
     grad.addColorStop(1, '#73fbd3');
     ctx.fillStyle = grad;
     ctx.fillText('COSMIC BLUEPRINT', cx, y);
-    y += 20;
+    y += 18;
 
-    ctx.font = '14px "Courier New", monospace';
+    ctx.font = '12px "Rajdhani", monospace';
     ctx.fillStyle = '#888';
     ctx.fillText('Select your Sun, Moon, and Rising signs', cx, y);
-    y += 40;
+    y += 30;
 
     // Sign selectors
     const labels = ['SUN', 'MOON', 'RISING'];
@@ -138,11 +138,11 @@ export class CharacterCreation {
       ctx.fillStyle = '#777';
       ctx.fillText(`${element}`, cx, y + 44);
 
-      y += 70;
+      y += 55;
     }
 
-    // Stat preview
-    if (this.chart) {
+    // Stat preview — only show if screen is tall enough
+    if (this.chart && height > 450) {
       y += 10;
       ctx.font = 'bold 14px monospace';
       ctx.fillStyle = '#a78bfa';
@@ -218,12 +218,15 @@ export class CharacterCreation {
       ctx.fillText(`${nak.theme}`, cx, y + 16);
     }
 
-    // Confirm prompt
+    // Confirm prompt — pinned to bottom, clear of content
     const alpha = 0.5 + Math.sin(frameCount * 0.08) * 0.5;
     ctx.globalAlpha = alpha;
-    ctx.font = 'bold 18px "Courier New", monospace';
+    ctx.font = 'bold 16px "Orbitron", monospace';
     ctx.fillStyle = '#00ffff';
-    ctx.fillText('PRESS ENTER TO TRANSMIT', cx, height - 40);
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#00ffff';
+    ctx.fillText('PRESS ENTER TO TRANSMIT', cx, height - 16);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
 
     ctx.restore();

@@ -329,15 +329,27 @@ export class Player {
     const pulse = 1 + Math.sin(frameCount * 0.15) * 0.06;
     const coreRadius = this.w * 0.45 * pulse;
 
-    // Outer aura
+    // Outer aura — large, breathing glow
     ctx.save();
-    ctx.globalAlpha = 0.15;
-    ctx.shadowBlur = 35;
+    ctx.globalAlpha = 0.25 + Math.sin(frameCount * 0.06) * 0.08;
+    ctx.shadowBlur = 50;
     ctx.shadowColor = colors.main;
     ctx.fillStyle = colors.main;
     ctx.beginPath();
-    ctx.arc(0, 0, coreRadius + 12, 0, Math.PI * 2);
+    ctx.arc(0, 0, coreRadius + 20, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+
+    // Glow ring
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = colors.main;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = colors.main;
+    ctx.beginPath();
+    ctx.arc(0, 0, coreRadius + 14, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
 
     // Core: rotating icosahedron (drawn as multi-sided polygon)
@@ -399,15 +411,27 @@ export class Player {
     ctx.rotate(swimTilt);
     ctx.translate(0, swimBob * 0.3);
 
-    // Outer aura
+    // Outer aura — large, breathing glow
     ctx.save();
-    ctx.globalAlpha = 0.12;
-    ctx.shadowBlur = 30;
+    ctx.globalAlpha = 0.22 + Math.sin(frameCount * 0.06) * 0.06;
+    ctx.shadowBlur = 45;
     ctx.shadowColor = colors.main;
     ctx.fillStyle = colors.main;
     ctx.beginPath();
-    ctx.ellipse(0, 0, this.w * 0.6 + 10, this.h * 0.4 + 8, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, this.w * 0.7 + 16, this.h * 0.5 + 12, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+
+    // Glow ring
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.strokeStyle = colors.main;
+    ctx.lineWidth = 1.5;
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = colors.main;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.w * 0.6 + 10, this.h * 0.42 + 8, 0, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
 
     // Body capsule

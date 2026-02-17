@@ -164,24 +164,28 @@ export class ChakraPowers {
 
   /** Draw power wheel HUD element. */
   drawWheel(ctx, x, y, radius) {
+    const wheelRadius = radius * 1.3;
     const angleStep = (Math.PI * 2) / 7;
 
     for (let i = 0; i < 7; i++) {
       const angle = -Math.PI / 2 + i * angleStep;
-      const px = x + Math.cos(angle) * radius;
-      const py = y + Math.sin(angle) * radius;
-      const r = 14;
+      const px = x + Math.cos(angle) * wheelRadius;
+      const py = y + Math.sin(angle) * wheelRadius;
+      const r = 16;
 
       // Background circle
       ctx.beginPath();
       ctx.arc(px, py, r, 0, Math.PI * 2);
-      ctx.fillStyle = this.unlocked[i] ? CHAKRAS[i].color + '33' : 'rgba(255,255,255,0.05)';
+      ctx.fillStyle = this.unlocked[i] ? CHAKRAS[i].color + '44' : 'rgba(255,255,255,0.08)';
       ctx.fill();
 
-      // Border
-      ctx.strokeStyle = this.unlocked[i] ? CHAKRAS[i].color : 'rgba(255,255,255,0.15)';
+      // Border with glow
+      ctx.shadowBlur = this.unlocked[i] ? 8 : 0;
+      ctx.shadowColor = this.unlocked[i] ? CHAKRAS[i].color : 'transparent';
+      ctx.strokeStyle = this.unlocked[i] ? CHAKRAS[i].color : 'rgba(255,255,255,0.2)';
       ctx.lineWidth = 2;
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
       // Cooldown sweep
       if (this.cooldowns[i] > 0 && this.unlocked[i]) {
@@ -196,21 +200,21 @@ export class ChakraPowers {
 
       // Active indicator
       if (this.activePower === i) {
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = CHAKRAS[i].color;
         ctx.beginPath();
-        ctx.arc(px, py, r + 3, 0, Math.PI * 2);
+        ctx.arc(px, py, r + 4, 0, Math.PI * 2);
         ctx.strokeStyle = CHAKRAS[i].color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
 
-      // Label
+      // Label — number key hint
       ctx.fillStyle = this.unlocked[i] ? '#fff' : '#555';
-      ctx.font = '9px monospace';
+      ctx.font = 'bold 11px "Orbitron", monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(CHAKRAS[i].shortName[0], px, py + 3);
+      ctx.fillText(`${i + 1}`, px, py + 4);
     }
     ctx.textAlign = 'left';
   }

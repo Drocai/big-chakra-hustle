@@ -52,8 +52,26 @@ export class Shard {
       // Draw star for token
       this._drawStar(ctx, 0, 0, 5, this.size / 2, this.size / 4);
     } else {
-      // Default: rotating square
-      ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+      // Default chakra: rotating diamond with inner glow
+      const s = this.size * 0.6;
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s, 0);
+      ctx.lineTo(0, s);
+      ctx.lineTo(-s, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner bright core
+      ctx.fillStyle = '#ffffff';
+      ctx.globalAlpha = 0.4;
+      ctx.beginPath();
+      ctx.moveTo(0, -s * 0.4);
+      ctx.lineTo(s * 0.4, 0);
+      ctx.lineTo(0, s * 0.4);
+      ctx.lineTo(-s * 0.4, 0);
+      ctx.closePath();
+      ctx.fill();
     }
 
     ctx.restore();

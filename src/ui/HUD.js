@@ -108,7 +108,7 @@ export class HUD {
 
     // === POWER WHEEL ===
     if (chakraPowers) {
-      chakraPowers.drawWheel(ctx, 60, height - 60, 36);
+      chakraPowers.drawWheel(ctx, 65, height - 65, 40);
     }
   }
 

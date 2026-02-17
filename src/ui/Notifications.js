@@ -60,7 +60,7 @@ export class NotificationSystem {
     this.show(text, screenWidth / 2, 100, {
       color: CONFIG.colors.accent,
       size: 18,
-      duration: 90
+      duration: 40
     });
   }
 

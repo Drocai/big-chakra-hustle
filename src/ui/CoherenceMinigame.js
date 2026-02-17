@@ -31,6 +31,9 @@ export class CoherenceMinigame {
 
     // Button hover tracking
     this.hoveredButton = -1;
+
+    // Track timeouts for cleanup
+    this._pendingTimeouts = [];
   }
 
   start(onComplete) {
@@ -45,8 +48,22 @@ export class CoherenceMinigame {
     this._nextRound();
   }
 
+  _setTimeout(fn, ms) {
+    const id = setTimeout(() => {
+      fn();
+      const idx = this._pendingTimeouts.indexOf(id);
+      if (idx !== -1) this._pendingTimeouts.splice(idx, 1);
+    }, ms);
+    this._pendingTimeouts.push(id);
+    return id;
+  }
+
   close() {
     this.active = false;
+    for (let i = 0; i < this._pendingTimeouts.length; i++) {
+      clearTimeout(this._pendingTimeouts[i]);
+    }
+    this._pendingTimeouts.length = 0;
   }
 
   _nextRound() {
@@ -77,9 +94,9 @@ export class CoherenceMinigame {
       this.audio.beep(freq / 2, 0.14, 'sine');
     }
 
-    setTimeout(() => {
+    this._setTimeout(() => {
       this.flashIndex = -1;
-      setTimeout(() => this._showSequence(i + 1), 200);
+      this._setTimeout(() => this._showSequence(i + 1), 200);
     }, 300);
   }
 
@@ -118,7 +135,7 @@ export class CoherenceMinigame {
 
     // Flash
     this.flashIndex = idx;
-    setTimeout(() => { this.flashIndex = -1; }, 120);
+    this._setTimeout(() => { this.flashIndex = -1; }, 120);
 
     // Audio
     if (this.audio) {
@@ -146,7 +163,7 @@ export class CoherenceMinigame {
           }
         } else {
           this.statusText = 'Perfect. Next round...';
-          setTimeout(() => this._nextRound(), 500);
+          this._setTimeout(() => this._nextRound(), 500);
         }
       } else {
         this.statusText = `Good... ${this.sequence.length - this.inputStep} more`;
@@ -156,7 +173,7 @@ export class CoherenceMinigame {
       this.inputStep = 0;
       this.readyForInput = false;
       this.breathTiming = [];
-      setTimeout(() => this._showSequence(0), 600);
+      this._setTimeout(() => this._showSequence(0), 600);
     }
   }
 

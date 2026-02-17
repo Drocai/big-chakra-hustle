@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head><title>OG Image Generator</title></head>
+<body style="background:#000;color:#fff;font-family:monospace">
+<p>Open this in a browser, right-click the canvas below, and "Save image as" → <code>og-image.png</code> in the project root.</p>
+<canvas id="og" width="1200" height="630"></canvas>
+<script>
+const c = document.getElementById('og');
+const ctx = c.getContext('2d');
+
+// Background gradient
+const bg = ctx.createRadialGradient(600, 315, 100, 600, 315, 700);
+bg.addColorStop(0, '#150520');
+bg.addColorStop(1, '#000000');
+ctx.fillStyle = bg;
+ctx.fillRect(0, 0, 1200, 630);
+
+// Stars
+ctx.fillStyle = '#fff';
+for (let i = 0; i < 200; i++) {
+  const x = Math.random() * 1200;
+  const y = Math.random() * 630;
+  const s = Math.random() * 2;
+  ctx.globalAlpha = 0.2 + Math.random() * 0.8;
+  ctx.fillRect(x, y, s, s);
+}
+ctx.globalAlpha = 1;
+
+// Sacred geometry circle
+ctx.strokeStyle = 'rgba(115, 251, 211, 0.15)';
+ctx.lineWidth = 1;
+for (let i = 0; i < 6; i++) {
+  const angle = (Math.PI * 2 / 6) * i;
+  ctx.beginPath();
+  ctx.arc(600 + Math.cos(angle) * 80, 250 + Math.sin(angle) * 80, 80, 0, Math.PI * 2);
+  ctx.stroke();
+}
+ctx.beginPath();
+ctx.arc(600, 250, 80, 0, Math.PI * 2);
+ctx.stroke();
+
+// Title glow
+ctx.shadowBlur = 40;
+ctx.shadowColor = '#ff00ff';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+// Title
+const titleGrad = ctx.createLinearGradient(300, 250, 900, 250);
+titleGrad.addColorStop(0, '#ff00ff');
+titleGrad.addColorStop(1, '#00ffff');
+ctx.font = 'bold 72px "Courier New", monospace';
+ctx.fillStyle = titleGrad;
+ctx.fillText('BIG CHAKRA HUSTLE', 600, 250);
+ctx.shadowBlur = 0;
+
+// Subtitle
+ctx.font = '24px "Courier New", monospace';
+ctx.fillStyle = '#ccc';
+ctx.fillText('Your birth chart determines your powers', 600, 330);
+
+// Chakra color bar
+const chakraColors = ['#ff0000', '#ff6600', '#ffee00', '#00ff44', '#00ccff', '#6600ff', '#cc00ff'];
+const barY = 400;
+const dotSize = 14;
+const spacing = 50;
+const startX = 600 - (6 * spacing) / 2;
+for (let i = 0; i < 7; i++) {
+  ctx.fillStyle = chakraColors[i];
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = chakraColors[i];
+  ctx.beginPath();
+  ctx.arc(startX + i * spacing, barY, dotSize, 0, Math.PI * 2);
+  ctx.fill();
+}
+ctx.shadowBlur = 0;
+
+// CTA
+ctx.font = 'bold 30px "Courier New", monospace';
+ctx.fillStyle = '#00ffff';
+ctx.shadowBlur = 20;
+ctx.shadowColor = '#00ffff';
+ctx.fillText('PLAY FREE IN YOUR BROWSER', 600, 500);
+ctx.shadowBlur = 0;
+
+// Tech badge
+ctx.font = '16px monospace';
+ctx.fillStyle = '#555';
+ctx.fillText('Vanilla JS  |  Zero Dependencies  |  ~250KB', 600, 570);
+</script>
+</body>
+</html>

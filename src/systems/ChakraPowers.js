@@ -14,6 +14,7 @@ const POWER_DEFS = [
     activate(player, enemies, particles, camera) {
       // AOE stun: damage + stun all enemies in range
       const range = 200;
+      const rangeSq = range * range;
       camera.shake(12);
       particles.emit(player.x + player.w / 2, player.y + player.h, '#ff0000', 30, 10, 30, { gravity: 0.1 });
 
@@ -21,7 +22,7 @@ const POWER_DEFS = [
         const e = enemies[i];
         const dx = e.x - player.x;
         const dy = e.y - player.y;
-        if (Math.sqrt(dx * dx + dy * dy) < range) {
+        if (dx * dx + dy * dy < rangeSq) {
           e.takeDamage(30, dx > 0 ? 1 : -1, particles);
           e.stateTimer = 60; // stun
           e.state = 'HURT';

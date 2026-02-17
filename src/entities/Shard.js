@@ -31,11 +31,11 @@ export class Shard {
     if (this.collected) return;
     const c = this.colors[this.type] || this.colors.chakra;
 
+    ctx.save();
     ctx.shadowBlur = 15;
     ctx.shadowColor = c.glow;
     ctx.fillStyle = c.fill;
 
-    ctx.save();
     ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
     ctx.rotate(frameCount * CONFIG.shard.rotationSpeed);
 
@@ -57,7 +57,6 @@ export class Shard {
     }
 
     ctx.restore();
-    ctx.shadowBlur = 0;
   }
 
   _drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {

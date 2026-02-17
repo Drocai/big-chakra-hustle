@@ -1,7 +1,7 @@
 {
   "name": "Big Chakra Hustle",
   "short_name": "Chakra Hustle",
-  "description": "2D action-platformer roguelike — infinite procedural levels across 7 chakra worlds with astrology integration.",
+  "description": "Neon cyberpunk roguelike platformer meets astrology. 7 chakra worlds. Procedural everything. Zero downloads.",
   "start_url": "/index.html",
   "display": "fullscreen",
   "orientation": "landscape",
@@ -10,10 +10,19 @@
   "categories": ["games", "entertainment"],
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23050510' stroke='%2373fbd3' stroke-width='3'/><text x='50' y='58' text-anchor='middle' font-size='28' fill='%2373fbd3'>%E2%9C%A6</text></svg>",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='64' fill='%23050510'/><circle cx='256' cy='200' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='226' cy='200' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='286' cy='200' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='241' cy='170' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='271' cy='170' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='241' cy='230' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><circle cx='271' cy='230' r='60' fill='none' stroke='%2373fbd3' stroke-width='4' opacity='0.3'/><text x='256' y='340' text-anchor='middle' font-family='Courier New,monospace' font-weight='bold' font-size='48' fill='%23ff00ff'>BCH</text><text x='256' y='390' text-anchor='middle' font-family='monospace' font-size='24' fill='%2373fbd3'>HUSTLE</text><circle cx='150' cy='430' r='8' fill='%23ff0000'/><circle cx='190' cy='430' r='8' fill='%23ff6600'/><circle cx='230' cy='430' r='8' fill='%23ffee00'/><circle cx='270' cy='430' r='8' fill='%2300ff44'/><circle cx='310' cy='430' r='8' fill='%2300ccff'/><circle cx='350' cy='430' r='8' fill='%236600ff'/></svg>",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "BIG CHAKRA HUSTLE gameplay"
     }
   ]
 }

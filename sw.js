@@ -1,7 +1,7 @@
 /**
  * Service Worker — Offline cache for PWA support.
  */
-const CACHE_NAME = 'bigchakrahustle-v1';
+const CACHE_NAME = 'bigchakrahustle-v2';
 const ASSETS = [
   '/',
   '/index.html',

@@ -4,8 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#050510" />
-  <meta name="description" content="2D action-platformer roguelike across 7 chakra worlds" />
+  <meta name="description" content="Neon cyberpunk roguelike platformer meets astrology. 7 chakra worlds. Procedural everything. Zero downloads. ~250KB." />
   <title>BIG CHAKRA HUSTLE</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="BIG CHAKRA HUSTLE" />
+  <meta property="og:description" content="Neon cyberpunk roguelike meets astrology. 7 chakra worlds. Procedural everything. Zero downloads." />
+  <meta property="og:image" content="og-image.png" />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BIG CHAKRA HUSTLE" />
+  <meta name="twitter:description" content="Your birth chart determines your powers. 7 chakra worlds. Pure vibes." />
+  <meta name="twitter:image" content="og-image.png" />
+
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="game.css" />
 </head>
@@ -16,6 +29,67 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
+  </script>
+
+  <!-- Analytics: Plausible (privacy-friendly, no cookies) -->
+  <!-- Uncomment and set data-domain when ready:
+  <script defer data-domain="bigchakrahustle.com" src="https://plausible.io/js/script.js"></script>
+  -->
+
+  <!-- Ad SDK: GameMonetize (uncomment when ready)
+  <script src="https://api.gamemonetize.com/sdk.js"></script>
+  -->
+
+  <script>
+    // Ad integration hooks — called from Game.js at natural pause points
+    window.BigChakraAds = {
+      // Minimum seconds between interstitial ads
+      MIN_AD_INTERVAL: 180,
+      _lastAdTime: 0,
+
+      /** Show interstitial ad (between death → character creation). */
+      showInterstitial() {
+        const now = Date.now() / 1000;
+        if (now - this._lastAdTime < this.MIN_AD_INTERVAL) return Promise.resolve();
+        this._lastAdTime = now;
+
+        // GameMonetize integration:
+        // if (typeof sdk !== 'undefined' && sdk.showBanner) {
+        //   return new Promise(resolve => {
+        //     sdk.showBanner({ type: 'interstitial', onClose: resolve });
+        //   });
+        // }
+        return Promise.resolve();
+      },
+
+      /** Show rewarded video ad (optional, player-initiated for bonus tokens). */
+      showRewarded() {
+        // if (typeof sdk !== 'undefined' && sdk.showBanner) {
+        //   return new Promise((resolve, reject) => {
+        //     sdk.showBanner({
+        //       type: 'rewarded',
+        //       onClose: (completed) => completed ? resolve(5) : reject()
+        //     });
+        //   });
+        // }
+        return Promise.reject('No ad provider configured');
+      }
+    };
+
+    // Lightweight event tracking (works with Plausible or any analytics)
+    window.BigChakraAnalytics = {
+      track(event, props) {
+        // Plausible
+        if (typeof plausible !== 'undefined') {
+          plausible(event, { props });
+          return;
+        }
+        // Fallback: console in dev
+        if (location.hostname === 'localhost') {
+          console.log('[Analytics]', event, props);
+        }
+      }
+    };
   </script>
 </body>
 </html>

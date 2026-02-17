@@ -141,18 +141,18 @@ export class BossBase {
   _updatePhase(player, platforms, particles, camera, frameCount) {
     const dx = player.x - this.x;
     const dy = player.y - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const distSq = dx * dx + dy * dy;
 
     // Default: chase + attack
     const speed = 1 + this.phase * 0.5;
-    if (dist > 60) {
+    if (distSq > 3600) { // 60*60
       this.vx = (dx > 0 ? 1 : -1) * speed;
     } else {
       this.vx *= 0.8;
     }
 
     // Attack when close and cooldown ready
-    if (dist < 120 && this.attackTimer <= 0) {
+    if (distSq < 14400 && this.attackTimer <= 0) { // 120*120
       this._attack(player, particles, camera);
       this.attackTimer = this.attackCooldown - this.phase * 10;
     }

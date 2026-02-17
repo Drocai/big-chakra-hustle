@@ -20,6 +20,9 @@ export class AudioEngine {
     this._padOsc = null;
     this._currentWorld = -1;
     this._beatIndex = 0;
+
+    // Track pending timeouts for cleanup
+    this._pendingTimeouts = [];
   }
 
   /** Initialize on first user interaction. */
@@ -52,6 +55,17 @@ export class AudioEngine {
   toggleMute() {
     this.muted = !this.muted;
     if (this.masterGain) this.masterGain.gain.value = this.muted ? 0 : this.volume;
+  }
+
+  /** Schedule a callback with automatic cleanup tracking. */
+  _setTimeout(fn, ms) {
+    const id = setTimeout(() => {
+      fn();
+      const idx = this._pendingTimeouts.indexOf(id);
+      if (idx !== -1) this._pendingTimeouts.splice(idx, 1);
+    }, ms);
+    this._pendingTimeouts.push(id);
+    return id;
   }
 
   // === CORE: beep() from archive, extended ===
@@ -95,7 +109,7 @@ export class AudioEngine {
   // === SFX ===
   sfxJump() {
     this.beep(300, 0.08, 'sine');
-    setTimeout(() => this.beep(500, 0.06, 'sine'), 30);
+    this._setTimeout(() => this.beep(500, 0.06, 'sine'), 30);
   }
 
   sfxAttack() {
@@ -110,13 +124,13 @@ export class AudioEngine {
 
   sfxCollect() {
     this.beep(800, 0.06, 'sine');
-    setTimeout(() => this.beep(1200, 0.08, 'sine'), 50);
+    this._setTimeout(() => this.beep(1200, 0.08, 'sine'), 50);
   }
 
   sfxDeath() {
     this.beep(400, 0.15, 'sawtooth');
-    setTimeout(() => this.beep(200, 0.2, 'sawtooth'), 100);
-    setTimeout(() => this.beep(100, 0.3, 'sawtooth'), 250);
+    this._setTimeout(() => this.beep(200, 0.2, 'sawtooth'), 100);
+    this._setTimeout(() => this.beep(100, 0.3, 'sawtooth'), 250);
   }
 
   sfxDash() {
@@ -126,8 +140,8 @@ export class AudioEngine {
 
   sfxSwitch() {
     this.beep(500, 0.06, 'triangle');
-    setTimeout(() => this.beep(700, 0.06, 'triangle'), 40);
-    setTimeout(() => this.beep(1000, 0.05, 'triangle'), 80);
+    this._setTimeout(() => this.beep(700, 0.06, 'triangle'), 40);
+    this._setTimeout(() => this.beep(1000, 0.05, 'triangle'), 80);
   }
 
   sfxPowerActivate(chakraIndex) {
@@ -141,7 +155,7 @@ export class AudioEngine {
     this._ensureCtx();
     // Building drone
     for (let i = 0; i < 5; i++) {
-      setTimeout(() => {
+      this._setTimeout(() => {
         this.beep(60 + i * 20, 0.4, 'sawtooth');
       }, i * 150);
     }
@@ -253,6 +267,11 @@ export class AudioEngine {
       try { this._padOsc.stop(); } catch(e) {}
       this._padOsc = null;
     }
+    // Clear all pending SFX timeouts
+    for (let i = 0; i < this._pendingTimeouts.length; i++) {
+      clearTimeout(this._pendingTimeouts[i]);
+    }
+    this._pendingTimeouts.length = 0;
     this._currentWorld = -1;
   }
 }

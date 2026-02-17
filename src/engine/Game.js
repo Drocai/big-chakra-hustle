@@ -81,12 +81,29 @@ export class Game {
     // Starfield
     this.stars = [];
 
+    // Share state
+    this._shareButtonBounds = null;
+    this._lastAdTime = 0;
+
     // Load saved data
     this.saveSystem.load();
     this.tokenEconomy.tokens = this.saveSystem.persistent.tokens;
 
     this._resize();
     window.addEventListener('resize', () => this._resize());
+
+    // Click handler for share button
+    this.canvas.addEventListener('click', e => {
+      if (this.state === CONFIG.states.GAME_OVER && this._shareButtonBounds) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const b = this._shareButtonBounds;
+        if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+          this.shareRun();
+        }
+      }
+    });
   }
 
   _resize() {
@@ -247,6 +264,13 @@ export class Game {
       this.setState(CONFIG.states.PLAYING);
       this.notifications.showAffirmation(this.width);
       this.audio.sfxMenuSelect();
+
+      // Analytics: track run start
+      if (window.BigChakraAnalytics) {
+        window.BigChakraAnalytics.track('run_start', {
+          sun: chart.sun.sign, moon: chart.moon.sign, rising: chart.rising.sign
+        });
+      }
 
       // Save birth chart
       this.saveSystem.saveBirthChart({
@@ -422,9 +446,14 @@ export class Game {
       if (this.boss) this.boss.x -= scrollDx;
       this.particles.shift(scrollDx);
 
-      while (this.platforms.length > 0 && this.platforms[0].x + this.platforms[0].w < CONFIG.platform.offscreenRemove) {
-        this.platforms.shift();
-        this.addNextPlatform();
+      // Remove off-screen platforms using index tracking instead of shift()
+      let removeCount = 0;
+      while (removeCount < this.platforms.length && this.platforms[removeCount].x + this.platforms[removeCount].w < CONFIG.platform.offscreenRemove) {
+        removeCount++;
+      }
+      if (removeCount > 0) {
+        this.platforms.splice(0, removeCount);
+        for (let r = 0; r < removeCount; r++) this.addNextPlatform();
       }
 
       // Boss room trigger: spawn boss after enough platforms in boss room
@@ -440,8 +469,19 @@ export class Game {
           color: this.boss.chakra.color
         });
       }
-      this.shards = this.shards.filter(s => s.x > CONFIG.platform.offscreenShardRemove && !s.collected);
-      this.enemies = this.enemies.filter(e => e.x > CONFIG.platform.offscreenShardRemove);
+      // In-place compaction instead of .filter() to avoid allocation every frame
+      let sw = 0;
+      for (let si = 0; si < this.shards.length; si++) {
+        const s = this.shards[si];
+        if (s.x > CONFIG.platform.offscreenShardRemove && !s.collected) this.shards[sw++] = s;
+      }
+      this.shards.length = sw;
+
+      let ew = 0;
+      for (let ei = 0; ei < this.enemies.length; ei++) {
+        if (this.enemies[ei].x > CONFIG.platform.offscreenShardRemove) this.enemies[ew++] = this.enemies[ei];
+      }
+      this.enemies.length = ew;
     }
 
     // Collect sounds
@@ -472,12 +512,33 @@ export class Game {
 
   _updateGameOver() {
     if (this.input.actionJustPressed('confirm')) {
-      if (this.tokenEconomy.tokens > 0) {
-        this._showingShop = true;
-        this.setState('SHOP');
+      // Analytics: track death
+      if (window.BigChakraAnalytics) {
+        const chart = this.natalChart;
+        window.BigChakraAnalytics.track('game_over', {
+          score: this.player.score,
+          world: this.levelGen.currentWorld,
+          sun: chart ? chart.sun.sign : '',
+          moon: chart ? chart.moon.sign : '',
+          rising: chart ? chart.rising.sign : ''
+        });
+      }
+
+      // Show interstitial ad at natural pause point
+      const proceed = () => {
+        if (this.tokenEconomy.tokens > 0) {
+          this._showingShop = true;
+          this.setState('SHOP');
+        } else {
+          this.charCreate = new CharacterCreation();
+          this.setState(CONFIG.states.CHARACTER_CREATE);
+        }
+      };
+
+      if (window.BigChakraAds) {
+        window.BigChakraAds.showInterstitial().then(proceed).catch(proceed);
       } else {
-        this.charCreate = new CharacterCreation();
-        this.setState(CONFIG.states.CHARACTER_CREATE);
+        proceed();
       }
     }
   }
@@ -643,19 +704,22 @@ export class Game {
   _drawGame(ctx, frameCount) {
     this.camera.applyTransform(ctx);
 
-    // Platforms
+    // Platforms (with off-screen culling)
     for (let i = 0; i < this.platforms.length; i++) {
-      this.platforms[i].draw(ctx);
+      const p = this.platforms[i];
+      if (p.x + p.w >= 0 && p.x <= this.width) p.draw(ctx);
     }
 
-    // Shards
+    // Shards (with off-screen culling)
     for (let i = 0; i < this.shards.length; i++) {
-      this.shards[i].draw(ctx, frameCount);
+      const s = this.shards[i];
+      if (s.x + s.size >= 0 && s.x <= this.width) s.draw(ctx, frameCount);
     }
 
-    // Enemies
+    // Enemies (with off-screen culling)
     for (let i = 0; i < this.enemies.length; i++) {
-      this.enemies[i].draw(ctx, frameCount);
+      const e = this.enemies[i];
+      if (e.x + e.w >= 0 && e.x <= this.width) e.draw(ctx, frameCount);
     }
 
     // Boss
@@ -718,28 +782,90 @@ export class Game {
     ctx.fillStyle = CONFIG.colors.healthRed;
     ctx.shadowBlur = 20;
     ctx.shadowColor = CONFIG.colors.healthRed;
-    ctx.fillText('VIBRATION DEPLETED', this.width / 2, this.height / 2 - 50);
+    ctx.fillText('VIBRATION DEPLETED', this.width / 2, this.height / 2 - 70);
     ctx.shadowBlur = 0;
 
     ctx.font = '18px monospace';
     ctx.fillStyle = '#ccc';
-    ctx.fillText(`Score: ${this.player.score}  |  Shards: ${this.player.shards}  |  Tokens: ${this.tokenEconomy.tokens}`, this.width / 2, this.height / 2);
+    ctx.fillText(`Score: ${this.player.score}  |  Shards: ${this.player.shards}  |  Tokens: ${this.tokenEconomy.tokens}`, this.width / 2, this.height / 2 - 20);
 
     // High score
     const isHigh = this.player.score >= this.saveSystem.persistent.highScore;
     if (isHigh && this.player.score > 0) {
       ctx.fillStyle = CONFIG.colors.gold;
       ctx.font = 'bold 16px monospace';
-      ctx.fillText('NEW HIGH SCORE!', this.width / 2, this.height / 2 + 30);
+      ctx.fillText('NEW HIGH SCORE!', this.width / 2, this.height / 2 + 10);
     }
+
+    // Share button
+    const shareBtnW = 220;
+    const shareBtnH = 36;
+    const shareBtnX = this.width / 2 - shareBtnW / 2;
+    const shareBtnY = this.height / 2 + 40;
+    this._shareButtonBounds = { x: shareBtnX, y: shareBtnY, w: shareBtnW, h: shareBtnH };
+
+    ctx.fillStyle = 'rgba(115, 251, 211, 0.15)';
+    ctx.strokeStyle = '#73fbd3';
+    ctx.lineWidth = 1;
+    ctx.fillRect(shareBtnX, shareBtnY, shareBtnW, shareBtnH);
+    ctx.strokeRect(shareBtnX, shareBtnY, shareBtnW, shareBtnH);
+    ctx.font = 'bold 14px monospace';
+    ctx.fillStyle = '#73fbd3';
+    ctx.fillText('SHARE YOUR RUN', this.width / 2, shareBtnY + shareBtnH / 2 + 5);
+
+    // Tip jar link
+    ctx.font = '12px monospace';
+    ctx.fillStyle = '#a78bfa';
+    ctx.fillText('Support the Dev', this.width / 2, shareBtnY + shareBtnH + 25);
 
     const alpha = 0.5 + Math.sin(this.timer.frameCount * 0.08) * 0.5;
     ctx.globalAlpha = alpha;
     ctx.font = 'bold 20px "Courier New", monospace';
     ctx.fillStyle = '#00ffff';
-    ctx.fillText('PRESS ENTER TO TRANSMIT AGAIN', this.width / 2, this.height / 2 + 80);
+    ctx.fillText('PRESS ENTER TO TRANSMIT AGAIN', this.width / 2, this.height / 2 + 140);
     ctx.globalAlpha = 1;
 
     ctx.restore();
+  }
+
+  /** Generate a shareable URL with run seed and birth chart. */
+  getShareURL() {
+    const base = window.location.origin + window.location.pathname;
+    const params = new URLSearchParams();
+    if (this.natalChart) {
+      params.set('sun', this.natalChart.sun.sign);
+      params.set('moon', this.natalChart.moon.sign);
+      params.set('rising', this.natalChart.rising.sign);
+    }
+    if (this.player) params.set('score', this.player.score);
+    const seed = this.natalChart ? Math.floor(this.natalChart.stats.alignment * 1000 + this.natalChart.stats.vitalEnergy) : 0;
+    params.set('seed', seed);
+    return `${base}?${params.toString()}`;
+  }
+
+  /** Share the current run via Web Share API or clipboard fallback. */
+  async shareRun() {
+    if (window.BigChakraAnalytics) window.BigChakraAnalytics.track('share_click');
+    const chart = this.natalChart;
+    const signs = chart ? `${chart.sun.sign}/${chart.moon.sign}/${chart.rising.sign}` : 'Unknown';
+    const score = this.player ? this.player.score : 0;
+    const url = this.getShareURL();
+    const text = `I scored ${score} in BIG CHAKRA HUSTLE as ${signs}! Can you beat my run?`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'BIG CHAKRA HUSTLE', text, url });
+      } catch (e) { /* user cancelled */ }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        this.notifications.show('Copied to clipboard!', this.width / 2, this.height / 2 - 20, {
+          color: '#73fbd3', size: 16, duration: 60
+        });
+      } catch (e) {
+        // Fallback: prompt
+        window.prompt('Copy this link:', `${text}\n${url}`);
+      }
+    }
   }
 }

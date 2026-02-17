@@ -97,26 +97,26 @@ export class Enemy {
     // Gravity (if applicable)
     this.vy += this.gravity;
 
-    // Distance to player
+    // Distance to player (squared to avoid sqrt)
     const dx = player.x - this.x;
     const dy = player.y - this.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
+    const distSq = dx * dx + dy * dy;
 
     // State machine
     switch (this.state) {
       case 'PATROL':
         this._patrol();
-        if (dist < this.chaseRange) {
+        if (distSq < this.chaseRange * this.chaseRange) {
           this.state = 'CHASE';
         }
         break;
 
       case 'CHASE':
-        this._chase(dx, dy, dist);
-        if (dist > this.chaseRange * 1.5) {
+        this._chase(dx, dy, distSq);
+        if (distSq > (this.chaseRange * 1.5) * (this.chaseRange * 1.5)) {
           this.state = 'PATROL';
         }
-        if (dist < this.attackRange) {
+        if (distSq < this.attackRange * this.attackRange) {
           this.state = 'ATTACK';
           this.stateTimer = 30;
         }
@@ -169,9 +169,10 @@ export class Enemy {
     }
   }
 
-  _chase(dx, dy, dist) {
+  _chase(dx, dy, distSq) {
     // Move toward player
-    if (dist > 0) {
+    if (distSq > 0) {
+      const dist = Math.sqrt(distSq);
       this.vx = (dx / dist) * this.chaseSpeed;
       if (this.gravity === 0) {
         // Floaters can move vertically

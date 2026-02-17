@@ -14,6 +14,8 @@ export class Timer {
     this._fpsFrames = 0;
     this._fpsLastTime = 0;
     this.fps = 0;
+
+    this._slowMoTimeout = null;
   }
 
   start() {
@@ -40,8 +42,12 @@ export class Timer {
 
   setSlowMotion(factor, duration = 0) {
     this.slowMotion = factor;
+    if (this._slowMoTimeout) clearTimeout(this._slowMoTimeout);
     if (duration > 0) {
-      setTimeout(() => { this.slowMotion = 1.0; }, duration * 1000);
+      this._slowMoTimeout = setTimeout(() => {
+        this.slowMotion = 1.0;
+        this._slowMoTimeout = null;
+      }, duration * 1000);
     }
   }
 }
